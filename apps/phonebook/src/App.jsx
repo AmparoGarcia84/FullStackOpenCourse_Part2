@@ -3,7 +3,7 @@ import Header from './components/Header'
 import Filter from './components/Filter'
 import Form from './components/Form'
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import personService from './services/persons'
   
 const App = () => {
   const [persons, setPersons] = useState([])
@@ -13,9 +13,10 @@ const App = () => {
 
   useEffect(() => {
     console.log('effect')
-    axios.get('http://localhost:3001/persons').then(response => {
-      console.log('promise fulfilled')
-      setPersons(response.data)
+    personService
+    .getAll()
+    .then(initialData => {
+      setPersons(initialData)
     })
   }, [])
   console.log('render', persons.length, 'persons')
@@ -39,11 +40,10 @@ const App = () => {
       number: newNumber
     }
 
-    axios
-    .post('http://localhost:3001/persons', personObject)
-    .then(response => {
-      console.log(response)
-      setPersons(persons.concat(response.data))
+    personService
+    .create(personObject)
+    .then(returnedPerson => {
+      setPersons(persons.concat(returnedPerson))
     })
   
     setNewName('')
