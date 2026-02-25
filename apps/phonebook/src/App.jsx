@@ -50,6 +50,20 @@ const App = () => {
     setNewNumber('')
   }
 
+  const deletePerson = (id) => {
+    console.log(`deleting person with id: ${id}`)
+    if (window.confirm(`Delete ${persons.find(person => person.id === id).name}?`)) {
+    personService
+    .deletePerson(id)
+    .then(response => {
+      console.log(response)
+      setPersons(persons.filter(person => person.id !== id))
+    }).catch(error => {
+      console.log(error)
+    })
+    }
+  }
+
   const handleNameChange = (event) => {
     setNewName(event.target.value)
   }
@@ -69,7 +83,7 @@ const App = () => {
       <Header title="Add a new" />
       <Form newName={newName} newNumber={newNumber} handleNameChange={handleNameChange} handleNumberChange={handleNumberChange} addPerson={addPerson} />
       <Header title="Numbers" />
-      <Persons personsToShow={personsToShow} />
+      <Persons personsToShow={personsToShow} deletePerson={deletePerson} />
     </div>
   )
 }
