@@ -21,6 +21,18 @@ const App = () => {
   }, [])
   console.log('render', persons.length, 'persons')
 
+  const resetPersonForm = () => {
+    setNewName('')
+    setNewNumber('')
+  }
+
+  const newPersonObject = (name, number) => {
+    return {
+      name: name,
+      number: number
+    }
+  }
+
   const addPerson = (event) => {
     event.preventDefault()
     if (newName === "") {
@@ -32,22 +44,35 @@ const App = () => {
       return
     }
     if (persons.some(person => person.name === newName)) {
-      alert(`${newName} is already in the phonebook`)
+      if (window.confirm(`${newName} is already in the phonebook. Replace the old number with the new one?`)) {
+        const id = persons.find(person => person.name === newName).id
+        const personObject = newPersonObject(newName, newNumber)
+        updatePerson(id, personObject)
+        return
+      }
       return
     }
-    const personObject = {
-      name: newName,
-      number: newNumber
-    }
-
+    const personObject = newPersonObject(newName, newNumber)
     personService
     .create(personObject)
     .then(returnedPerson => {
-      setPersons(persons.concat(returnedPerson))
+      setPersons(prev => prev.concat(returnedPerson))
+      resetPersonForm()
+    }).catch(error => {
+      console.log(error)
+      alert(`error creating ${newName} in the phonebook: ${error.message}`)
     })
-  
-    setNewName('')
-    setNewNumber('')
+  }
+
+  const updatePerson = (id, newPerson) => {
+    personService.update(id, newPerson)
+    .then(returnedPerson => {
+      setPersons(prev => prev.map(person => person.id === returnedPerson.id ? returnedPerson : person))
+      resetPersonForm()
+    }).catch(error => {
+      console.log(error)
+      alert(`error updating ${newName} in the phonebook: ${error.message}`)
+    })
   }
 
   const deletePerson = (id) => {
@@ -57,9 +82,10 @@ const App = () => {
     .deletePerson(id)
     .then(response => {
       console.log(response)
-      setPersons(persons.filter(person => person.id !== id))
+      setPersons(prev => prev.filter(person => person.id !== id))
     }).catch(error => {
       console.log(error)
+      alert(`error deleting ${persons.find(person => person.id === id).name} from the phonebook: ${error.message}`)
     })
     }
   }
