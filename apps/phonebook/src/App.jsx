@@ -4,12 +4,15 @@ import Filter from './components/Filter'
 import Form from './components/Form'
 import { useState, useEffect } from 'react'
 import personService from './services/persons'
+import Notification from './components/Notification'
   
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [notificationMessage, setNotificationMessage] = useState(null)
+  const [notificationClassName, setNotificationClassName] = useState('success')
 
   useEffect(() => {
     console.log('effect')
@@ -17,6 +20,7 @@ const App = () => {
     .getAll()
     .then(initialData => {
       setPersons(initialData)
+      handleNotificationMessage(`Phonebook has ${initialData.length} persons`, 'success')
     })
   }, [])
   console.log('render', persons.length, 'persons')
@@ -31,6 +35,14 @@ const App = () => {
       name: name,
       number: number
     }
+  }
+
+  const handleNotificationMessage = (message, className) => {
+    setNotificationMessage(message)
+    setNotificationClassName(className)
+    setTimeout(() => {
+      setNotificationMessage(null)
+    }, 5000)
   }
 
   const addPerson = (event) => {
@@ -48,6 +60,7 @@ const App = () => {
         const id = persons.find(person => person.name === newName).id
         const personObject = newPersonObject(newName, newNumber)
         updatePerson(id, personObject)
+        handleNotificationMessage(`Person ${newName} updated`, 'success')
         return
       }
       return
@@ -58,9 +71,10 @@ const App = () => {
     .then(returnedPerson => {
       setPersons(prev => prev.concat(returnedPerson))
       resetPersonForm()
+      handleNotificationMessage(`Person ${newName} added`, 'success')
     }).catch(error => {
       console.log(error)
-      alert(`error creating ${newName} in the phonebook: ${error.message}`)
+      handleNotificationMessage(`error creating ${newName} in the phonebook`, 'error')
     })
   }
 
@@ -69,9 +83,10 @@ const App = () => {
     .then(returnedPerson => {
       setPersons(prev => prev.map(person => person.id === returnedPerson.id ? returnedPerson : person))
       resetPersonForm()
+      handleNotificationMessage(`Person ${newName} updated`, 'success')
     }).catch(error => {
       console.log(error)
-      alert(`error updating ${newName} in the phonebook: ${error.message}`)
+      handleNotificationMessage(`error updating ${newName} in the phonebook: ${error.message}`, 'error')
     })
   }
 
@@ -83,9 +98,10 @@ const App = () => {
     .then(response => {
       console.log(response)
       setPersons(prev => prev.filter(person => person.id !== id))
+      handleNotificationMessage(`Person ${persons.find(person => person.id === id).name} deleted`, 'success')
     }).catch(error => {
       console.log(error)
-      alert(`error deleting ${persons.find(person => person.id === id).name} from the phonebook: ${error.message}`)
+      handleNotificationMessage(`Information of ${persons.find(person => person.id === id).name} has already been removed from server`, 'error')
     })
     }
   }
@@ -105,6 +121,7 @@ const App = () => {
   return (
     <div>
       <Header title="Phonebook" />
+      <Notification message={notificationMessage} className={notificationClassName} />
       <Filter filter={filter} handleFilterChange={handleFilterChange} />
       <Header title="Add a new" />
       <Form newName={newName} newNumber={newNumber} handleNameChange={handleNameChange} handleNumberChange={handleNumberChange} addPerson={addPerson} />
