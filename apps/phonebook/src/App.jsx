@@ -59,8 +59,15 @@ const App = () => {
       if (window.confirm(`${newName} is already in the phonebook. Replace the old number with the new one?`)) {
         const id = persons.find(person => person.name === newName).id
         const personObject = newPersonObject(newName, newNumber)
-        updatePerson(id, personObject)
-        handleNotificationMessage(`Person ${newName} updated`, 'success')
+        personService.update(id, personObject)
+        .then(returnedPerson => {
+          setPersons(prev => prev.map(person => person.id === returnedPerson.id ? returnedPerson : person))
+          resetPersonForm()
+          handleNotificationMessage(`Person ${newName} updated`, 'success')
+        }).catch(error => {
+          console.log(error)
+          handleNotificationMessage(`error updating ${newName} in the phonebook: ${error.message}`, 'error')
+        })
         return
       }
       return
@@ -75,18 +82,6 @@ const App = () => {
     }).catch(error => {
       console.log(error)
       handleNotificationMessage(`error creating ${newName} in the phonebook`, 'error')
-    })
-  }
-
-  const updatePerson = (id, newPerson) => {
-    personService.update(id, newPerson)
-    .then(returnedPerson => {
-      setPersons(prev => prev.map(person => person.id === returnedPerson.id ? returnedPerson : person))
-      resetPersonForm()
-      handleNotificationMessage(`Person ${newName} updated`, 'success')
-    }).catch(error => {
-      console.log(error)
-      handleNotificationMessage(`error updating ${newName} in the phonebook: ${error.message}`, 'error')
     })
   }
 
