@@ -12,6 +12,26 @@ const App = () => {
   const [message, setMessage] = useState(null) // Message when there are too many matches, so the user needs to be more specific
   const [countryDetail, setCountryDetail] = useState(null) // When is a only one Country object that matches the search
 
+  
+  // ************** Functions **************
+  
+  const clearSearchResults = () => {
+    setCountries([])
+    setMessage(null)
+    setCountryDetail(null)
+  }
+
+  const getCountryDetail = (countrySelected) => {
+    countriesService.getCountryDetail(countrySelected).then(country => {
+      setCountryDetail(country)
+    }).catch(error => {
+      console.log(error)
+      setMessage('Error fetching country detail')
+    })
+  }
+
+  // ************** Effects **************
+  
   useEffect(() => {
     countriesService.getAll().then(initialCountries => {
       const allCountriesNames = initialCountries.map(country => country.name.common)
@@ -24,9 +44,7 @@ const App = () => {
 
   useEffect(() => {
     // Reset the search values
-    setCountries([])
-    setMessage(null)
-    setCountryDetail(null)
+    clearSearchResults()
     // Filter how many names of allCountries match the search value
     const matchingCountries = allCountries.filter(country => country.toLowerCase().includes(value.toLowerCase()))
     if (matchingCountries.length === 0 || value === '') {
@@ -35,12 +53,7 @@ const App = () => {
     }
     if (matchingCountries.length === 1) {
       // Search in the API the complete object of the country that matches the search.
-      countriesService.getCountryDetail(matchingCountries[0]).then(country => {
-        setCountryDetail(country)
-      }).catch(error => {
-        console.log(error)
-        setMessage('Error fetching country detail')
-      })
+      getCountryDetail(matchingCountries[0])
       return
     }
     if (matchingCountries.length > 10) {
@@ -52,15 +65,22 @@ const App = () => {
     }
   }, [value, allCountries])
 
+  // ************** Handlers **************
+  
   const handleChange = (event) => {
     setValue(event.target.value)
+  }
+
+  const handleClick = (countrySelected) => {    
+    clearSearchResults()
+    getCountryDetail(countrySelected)
   }
 
   return (
     <div>
       <Search value={value} handleChange={handleChange} />
       <Message message={message} />
-      <ShowCountries countries={countries} />
+      <ShowCountries countries={countries} handleClick={handleClick} />
       <CountryDetail country={countryDetail} />
     </div>
   )
